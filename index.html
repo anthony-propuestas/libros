@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Book Picker - Elige tu próxima lectura</title>
+    <title>Club de los Libros</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -15,13 +15,13 @@
         }
 
         :root {
-            --bg-primary: #1a1a2e;
-            --bg-card: #16213e;
-            --bg-eliminated: #0f3460;
-            --accent: #e94560;
-            --accent-hover: #ff6b6b;
-            --text-primary: #eaeaea;
-            --text-secondary: #a0a0a0;
+            --bg-primary: #f5f0f8;
+            --bg-card: #fff9fc;
+            --bg-eliminated: #e8e0ec;
+            --accent: #d4a5c8;
+            --accent-hover: #c493b8;
+            --text-primary: #3d3644;
+            --text-secondary: #6b6374;
         }
 
         body {
@@ -31,8 +31,8 @@
             min-height: 100vh;
             padding: 2rem;
             background-image: 
-                radial-gradient(ellipse at top, #16213e 0%, transparent 50%),
-                radial-gradient(ellipse at bottom right, #e9456015 0%, transparent 40%);
+                radial-gradient(ellipse at top, #e8dcee 0%, transparent 50%),
+                radial-gradient(ellipse at bottom right, #d4a5c825 0%, transparent 40%);
         }
 
         .container {
@@ -131,7 +131,7 @@
         .btn-primary:hover {
             background: var(--accent-hover);
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(233, 69, 96, 0.3);
+            box-shadow: 0 8px 25px rgba(212, 165, 200, 0.35);
         }
 
         .btn-secondary {
@@ -176,6 +176,9 @@
             border: 2px solid transparent;
             position: relative;
             overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .book-card::before {
@@ -193,7 +196,7 @@
         .book-card:hover:not(.eliminated) {
             transform: translateY(-4px);
             border-color: var(--accent);
-            box-shadow: 0 10px 30px rgba(233, 69, 96, 0.2);
+            box-shadow: 0 10px 30px rgba(212, 165, 200, 0.25);
         }
 
         .book-card:hover:not(.eliminated)::before {
@@ -215,6 +218,7 @@
             font-size: 1.1rem;
             font-weight: 500;
             word-break: break-word;
+            text-align: center;
         }
 
         .empty-state {
@@ -236,7 +240,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(61, 54, 68, 0.6);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -260,7 +264,7 @@
             transform: scale(0.8);
             transition: transform 0.3s ease;
             border: 2px solid var(--accent);
-            box-shadow: 0 20px 60px rgba(233, 69, 96, 0.3);
+            box-shadow: 0 20px 60px rgba(212, 165, 200, 0.3);
         }
 
         .modal-overlay.active .modal {
@@ -279,6 +283,11 @@
 
         .modal-elimination {
             display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            width: 100%;
         }
 
         .modal-overlay.mode-elimination .modal-winner {
@@ -286,7 +295,13 @@
         }
 
         .modal-overlay.mode-elimination .modal-elimination {
-            display: block;
+            display: flex;
+        }
+
+        .modal-elimination h2 {
+            width: 100%;
+            text-align: center;
+            margin-bottom: 1rem;
         }
 
         .elimination-countdown {
@@ -313,10 +328,14 @@
         .eliminated-book-title-wrap {
             display: none;
             margin: 1.5rem 0;
+            width: 100%;
+            align-items: center;
+            justify-content: center;
         }
 
         .modal-overlay.mode-elimination .eliminated-book-title-wrap.visible {
-            display: block;
+            display: flex;
+            flex-direction: column;
         }
 
         .eliminated-book-title {
@@ -325,8 +344,11 @@
             padding: 1.5rem;
             background: var(--bg-primary);
             border-radius: 12px;
-            color: var(--text-secondary);
+            color: var(--text-primary);
             border: 1px solid var(--bg-eliminated);
+            text-align: center;
+            width: 100%;
+            max-width: 100%;
         }
 
         .eliminated-book-title-label {
@@ -334,6 +356,7 @@
             font-size: 0.9rem;
             color: var(--accent);
             margin-bottom: 0.5rem;
+            text-align: center;
         }
 
         .winner-book {
@@ -421,7 +444,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(61, 54, 68, 0.4);
             z-index: 1000;
             opacity: 0;
             visibility: hidden;
@@ -487,7 +510,7 @@
 
     <div class="container">
         <header>
-            <h1>Grupo de Lectura Chicas open mind</h1>
+            <h1>Club de los Libros</h1>
             <p class="subtitle">¿No sabes qué leer? Deja que el destino elija por ti</p>
         </header>
 
@@ -600,7 +623,7 @@
             booksGrid.innerHTML = books.map((book, index) => `
                 <div class="book-card ${book.eliminated ? 'eliminated' : ''}" 
                      data-index="${index}">
-                    <div class="book-title">${book.title}</div>
+                    <div class="book-title">${book.eliminated ? book.title : index + 1}</div>
                 </div>
             `).join('');
         }
@@ -684,7 +707,7 @@
         }
 
         function createConfetti() {
-            const colors = ['#e94560', '#ff6b6b', '#ffd700', '#00d4ff', '#7b2cbf'];
+            const colors = ['#d4a5c8', '#c493b8', '#b8d4e3', '#a8e6cf', '#e8dcee'];
             
             for (let i = 0; i < 50; i++) {
                 setTimeout(() => {
