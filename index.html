@@ -211,18 +211,6 @@
             text-decoration: line-through;
         }
 
-        .book-card.shake {
-            animation: shake 0.5s ease;
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0) scale(0.95); }
-            20% { transform: translateX(-10px) scale(0.95); }
-            40% { transform: translateX(10px) scale(0.95); }
-            60% { transform: translateX(-10px) scale(0.95); }
-            80% { transform: translateX(10px) scale(0.95); }
-        }
-
         .book-title {
             font-size: 1.1rem;
             font-weight: 500;
@@ -283,6 +271,69 @@
             font-size: 1.8rem;
             margin-bottom: 1rem;
             color: var(--accent);
+        }
+
+        .modal-winner {
+            display: block;
+        }
+
+        .modal-elimination {
+            display: none;
+        }
+
+        .modal-overlay.mode-elimination .modal-winner {
+            display: none;
+        }
+
+        .modal-overlay.mode-elimination .modal-elimination {
+            display: block;
+        }
+
+        .elimination-countdown {
+            font-size: clamp(4rem, 15vw, 8rem);
+            font-weight: 700;
+            color: var(--accent);
+            min-height: 6rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 1.5rem 0;
+        }
+
+        .elimination-countdown.pulse {
+            animation: countdownPulse 0.8s ease;
+        }
+
+        @keyframes countdownPulse {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .eliminated-book-title-wrap {
+            display: none;
+            margin: 1.5rem 0;
+        }
+
+        .modal-overlay.mode-elimination .eliminated-book-title-wrap.visible {
+            display: block;
+        }
+
+        .eliminated-book-title {
+            font-size: clamp(1.1rem, 4vw, 1.5rem);
+            font-weight: 700;
+            padding: 1.5rem;
+            background: var(--bg-primary);
+            border-radius: 12px;
+            color: var(--text-secondary);
+            border: 1px solid var(--bg-eliminated);
+        }
+
+        .eliminated-book-title-label {
+            display: block;
+            font-size: 0.9rem;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
         }
 
         .winner-book {
@@ -469,9 +520,19 @@
 
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal">
-            <h2>🎉 ¡Tu próxima lectura!</h2>
-            <div class="winner-book" id="winnerBook"></div>
-            <button class="btn btn-primary" onclick="resetAll()">Empezar de nuevo</button>
+            <div class="modal-winner">
+                <h2>🎉 ¡Tu próxima lectura!</h2>
+                <div class="winner-book" id="winnerBook"></div>
+                <button class="btn btn-primary" onclick="resetAll()">Empezar de nuevo</button>
+            </div>
+            <div class="modal-elimination">
+                <h2>Eliminando...</h2>
+                <div class="elimination-countdown" id="eliminationCountdown" aria-live="polite"></div>
+                <div class="eliminated-book-title-wrap" id="eliminatedBookTitleWrap">
+                    <span class="eliminated-book-title-label">Libro eliminado</span>
+                    <div class="eliminated-book-title" id="eliminatedBookTitle"></div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -486,6 +547,9 @@
         const startBtn = document.getElementById('startBtn');
         const modalOverlay = document.getElementById('modalOverlay');
         const winnerBook = document.getElementById('winnerBook');
+        const eliminationCountdown = document.getElementById('eliminationCountdown');
+        const eliminatedBookTitleWrap = document.getElementById('eliminatedBookTitleWrap');
+        const eliminatedBookTitle = document.getElementById('eliminatedBookTitle');
         const helpModal = document.getElementById('helpModal');
         const helpOverlay = document.getElementById('helpOverlay');
         const eliminateBtn = document.getElementById('eliminateBtn');
@@ -543,22 +607,44 @@
 
         function eliminateRandom() {
             const activeBooks = books.filter(b => !b.eliminated);
-            
             if (activeBooks.length < 2) return;
 
             const randomIndex = Math.floor(Math.random() * activeBooks.length);
             const bookToEliminate = activeBooks[randomIndex];
             const actualIndex = books.findIndex(b => b.title === bookToEliminate.title);
+            const eliminatedTitle = bookToEliminate.title;
 
-            const card = document.querySelector(`[data-index="${actualIndex}"]`);
-            card.classList.add('shake');
-            
+            books[actualIndex].eliminated = true;
+            renderBooks();
+            updateCounter();
+
+            modalOverlay.classList.add('mode-elimination');
+            eliminatedBookTitleWrap.classList.remove('visible');
+            eliminatedBookTitle.textContent = eliminatedTitle;
+            eliminationCountdown.textContent = '';
+            eliminationCountdown.classList.remove('pulse');
+            modalOverlay.classList.add('active');
+
+            function showCountdown(n) {
+                eliminationCountdown.textContent = n;
+                eliminationCountdown.classList.remove('pulse');
+                void eliminationCountdown.offsetWidth;
+                eliminationCountdown.classList.add('pulse');
+            }
+
+            showCountdown(3);
+            setTimeout(() => showCountdown(2), 1000);
+            setTimeout(() => showCountdown(1), 2000);
             setTimeout(() => {
-                books[actualIndex].eliminated = true;
-                renderBooks();
-                updateCounter();
+                eliminationCountdown.textContent = '';
+                eliminationCountdown.classList.remove('pulse');
+                eliminatedBookTitleWrap.classList.add('visible');
+            }, 3000);
+            setTimeout(() => {
+                modalOverlay.classList.remove('active');
+                modalOverlay.classList.remove('mode-elimination');
                 checkWinner();
-            }, 400);
+            }, 5000);
         }
 
         function updateCounter() {
@@ -586,10 +672,10 @@
 
         function checkWinner() {
             const active = books.filter(b => !b.eliminated).length;
-            
             if (active === 1) {
                 const winner = books.find(b => !b.eliminated);
                 setTimeout(() => {
+                    modalOverlay.classList.remove('mode-elimination');
                     winnerBook.textContent = winner.title;
                     modalOverlay.classList.add('active');
                     createConfetti();
@@ -622,6 +708,7 @@
             startBtn.textContent = 'Comenzar selección';
             eliminateBtn.style.display = 'none';
             modalOverlay.classList.remove('active');
+            modalOverlay.classList.remove('mode-elimination');
             renderBooks();
             updateCounter();
         }
