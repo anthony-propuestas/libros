@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Picker - Elige tu próxima lectura</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #1a1a2e;
+            --bg-card: #16213e;
+            --bg-eliminated: #0f3460;
+            --accent: #e94560;
+            --accent-hover: #ff6b6b;
+            --text-primary: #eaeaea;
+            --text-secondary: #a0a0a0;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 2rem;
+            background-image: 
+                radial-gradient(ellipse at top, #16213e 0%, transparent 50%),
+                radial-gradient(ellipse at bottom right, #e9456015 0%, transparent 40%);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .input-section {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .input-group {
+            flex: 1;
+            display: flex;
+            min-width: 250px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 1rem 1.25rem;
+            border: 2px solid var(--bg-card);
+            border-radius: 12px 0 0 12px;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            font-size: 1rem;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        input[type="text"]::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .btn {
+            padding: 1rem 1.5rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-add {
+            background: var(--accent);
+            color: white;
+            border-radius: 0 12px 12px 0;
+        }
+
+        .btn-add:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(233, 69, 96, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 2px solid var(--bg-card);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent);
+        }
+
+        .counter {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem;
+            background: var(--bg-card);
+            border-radius: 12px;
+            font-weight: 500;
+        }
+
+        .counter-number {
+            color: var(--accent);
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .books-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .book-card {
+            background: var(--bg-card);
+            padding: 1.5rem;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .book-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--accent);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .book-card:hover:not(.eliminated) {
+            transform: translateY(-4px);
+            border-color: var(--accent);
+            box-shadow: 0 10px 30px rgba(233, 69, 96, 0.2);
+        }
+
+        .book-card:hover:not(.eliminated)::before {
+            transform: scaleX(1);
+        }
+
+        .book-card.eliminated {
+            background: var(--bg-eliminated);
+            opacity: 0.4;
+            pointer-events: none;
+            transform: scale(0.95);
+        }
+
+        .book-card.eliminated .book-title {
+            text-decoration: line-through;
+        }
+
+        .book-card.shake {
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0) scale(0.95); }
+            20% { transform: translateX(-10px) scale(0.95); }
+            40% { transform: translateX(10px) scale(0.95); }
+            60% { transform: translateX(-10px) scale(0.95); }
+            80% { transform: translateX(10px) scale(0.95); }
+        }
+
+        .book-title {
+            font-size: 1.1rem;
+            font-weight: 500;
+            word-break: break-word;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: var(--bg-card);
+            padding: 3rem;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 500px;
+            transform: scale(0.8);
+            transition: transform 0.3s ease;
+            border: 2px solid var(--accent);
+            box-shadow: 0 20px 60px rgba(233, 69, 96, 0.3);
+        }
+
+        .modal-overlay.active .modal {
+            transform: scale(1);
+        }
+
+        .modal h2 {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            color: var(--accent);
+        }
+
+        .winner-book {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 1.5rem 0;
+            padding: 1.5rem;
+            background: var(--bg-primary);
+            border-radius: 12px;
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            top: -10px;
+            animation: fall linear forwards;
+            z-index: 999;
+        }
+
+        @keyframes fall {
+            to {
+                top: 100vh;
+                transform: rotate(720deg);
+            }
+        }
+
+        .help-btn {
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--bg-card);
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .help-btn:hover {
+            background: var(--accent);
+            color: white;
+        }
+
+        .help-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--bg-card);
+            padding: 2rem;
+            border-radius: 16px;
+            max-width: 400px;
+            z-index: 1001;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .help-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .help-modal h3 {
+            margin-bottom: 1rem;
+            color: var(--accent);
+        }
+
+        .help-modal p {
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 0.5rem;
+        }
+
+        .help-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .help-modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .close-help {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 1rem;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .input-group {
+                min-width: 100%;
+            }
+
+            .btn-add {
+                border-radius: 12px;
+                width: 100%;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            .books-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="help-btn" onclick="toggleHelp()">?</button>
+
+    <div class="help-modal-overlay" id="helpOverlay" onclick="toggleHelp()"></div>
+    <div class="help-modal" id="helpModal">
+        <button class="close-help" onclick="toggleHelp()">&times;</button>
+        <h3>¿Cómo funciona?</h3>
+        <p>1. Añade los libros que quieres considerar</p>
+        <p>2. Pulsa "Comenzar selección"</p>
+        <p>3. Pulsa "Eliminar uno al azar" tantas veces como quieras</p>
+        <p>4. El último que quede será tu elección</p>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1>Grupo de Lectura Chicas open mind</h1>
+            <p class="subtitle">¿No sabes qué leer? Deja que el destino elija por ti</p>
+        </header>
+
+        <div class="input-section">
+            <div class="input-group">
+                <input type="text" id="bookInput" placeholder="Añade un libro..." maxlength="100">
+                <button class="btn btn-add" onclick="addBook()">+</button>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-primary" id="startBtn" onclick="startSelection()">Comenzar selección</button>
+            <button class="btn btn-primary" id="eliminateBtn" onclick="eliminateRandom()" style="display:none; background: var(--accent-hover);">🎲 Eliminar uno al azar</button>
+            <button class="btn btn-secondary" onclick="resetAll()">Reiniciar</button>
+            <div class="counter">
+                <span class="counter-number" id="counter">0</span>
+                <span>libros restantes</span>
+            </div>
+        </div>
+
+        <div class="books-grid" id="booksGrid">
+            <div class="empty-state" id="emptyState">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                </svg>
+                <p>Añade libros para empezar</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <h2>🎉 ¡Tu próxima lectura!</h2>
+            <div class="winner-book" id="winnerBook"></div>
+            <button class="btn btn-primary" onclick="resetAll()">Empezar de nuevo</button>
+        </div>
+    </div>
+
+    <script>
+        let books = [];
+        let gameStarted = false;
+
+        const bookInput = document.getElementById('bookInput');
+        const booksGrid = document.getElementById('booksGrid');
+        const counter = document.getElementById('counter');
+        const emptyState = document.getElementById('emptyState');
+        const startBtn = document.getElementById('startBtn');
+        const modalOverlay = document.getElementById('modalOverlay');
+        const winnerBook = document.getElementById('winnerBook');
+        const helpModal = document.getElementById('helpModal');
+        const helpOverlay = document.getElementById('helpOverlay');
+        const eliminateBtn = document.getElementById('eliminateBtn');
+
+        bookInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addBook();
+        });
+
+        function addBook() {
+            const title = bookInput.value.trim();
+            
+            if (!title) {
+                shakeInput();
+                return;
+            }
+
+            if (books.some(b => b.title.toLowerCase() === title.toLowerCase())) {
+                alert('Este libro ya está en la lista');
+                return;
+            }
+
+            books.push({ title, eliminated: false });
+            bookInput.value = '';
+            renderBooks();
+            updateCounter();
+        }
+
+        function shakeInput() {
+            bookInput.style.borderColor = 'var(--accent)';
+            setTimeout(() => {
+                bookInput.style.borderColor = '';
+            }, 500);
+        }
+
+        function renderBooks() {
+            if (books.length === 0) {
+                booksGrid.innerHTML = `
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                        </svg>
+                        <p>Añade libros para empezar</p>
+                    </div>
+                `;
+                return;
+            }
+
+            booksGrid.innerHTML = books.map((book, index) => `
+                <div class="book-card ${book.eliminated ? 'eliminated' : ''}" 
+                     data-index="${index}">
+                    <div class="book-title">${book.title}</div>
+                </div>
+            `).join('');
+        }
+
+        function eliminateRandom() {
+            const activeBooks = books.filter(b => !b.eliminated);
+            
+            if (activeBooks.length < 2) return;
+
+            const randomIndex = Math.floor(Math.random() * activeBooks.length);
+            const bookToEliminate = activeBooks[randomIndex];
+            const actualIndex = books.findIndex(b => b.title === bookToEliminate.title);
+
+            const card = document.querySelector(`[data-index="${actualIndex}"]`);
+            card.classList.add('shake');
+            
+            setTimeout(() => {
+                books[actualIndex].eliminated = true;
+                renderBooks();
+                updateCounter();
+                checkWinner();
+            }, 400);
+        }
+
+        function updateCounter() {
+            const active = books.filter(b => !b.eliminated).length;
+            counter.textContent = active;
+        }
+
+        function startSelection() {
+            const active = books.filter(b => !b.eliminated).length;
+            
+            if (books.length < 2) {
+                alert('Añade al menos 2 libros para jugar');
+                return;
+            }
+
+            if (active < 2) {
+                alert('Necesitas al menos 2 libros activos para jugar');
+                return;
+            }
+
+            gameStarted = true;
+            startBtn.style.display = 'none';
+            eliminateBtn.style.display = 'inline-block';
+        }
+
+        function checkWinner() {
+            const active = books.filter(b => !b.eliminated).length;
+            
+            if (active === 1) {
+                const winner = books.find(b => !b.eliminated);
+                setTimeout(() => {
+                    winnerBook.textContent = winner.title;
+                    modalOverlay.classList.add('active');
+                    createConfetti();
+                }, 500);
+            }
+        }
+
+        function createConfetti() {
+            const colors = ['#e94560', '#ff6b6b', '#ffd700', '#00d4ff', '#7b2cbf'];
+            
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * 100 + 'vw';
+                    confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                    confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+                    document.body.appendChild(confetti);
+                    
+                    setTimeout(() => confetti.remove(), 4000);
+                }, i * 50);
+            }
+        }
+
+        function resetAll() {
+            books = [];
+            gameStarted = false;
+            startBtn.style.display = 'inline-block';
+            startBtn.textContent = 'Comenzar selección';
+            eliminateBtn.style.display = 'none';
+            modalOverlay.classList.remove('active');
+            renderBooks();
+            updateCounter();
+        }
+
+        function toggleHelp() {
+            helpModal.classList.toggle('active');
+            helpOverlay.classList.toggle('active');
+        }
+
+        updateCounter();
+    </script>
+</body>
+</html>
